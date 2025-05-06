@@ -1,8 +1,8 @@
 import {Injectable, Logger} from '@nestjs/common';
 import {ConfigFactory, ConfigService} from '@nestjs/config';
-import {existsSync, readFileSync} from 'fs';
+import {existsSync, readFileSync} from 'node:fs';
 import * as yaml from 'js-yaml';
-import {isAbsolute, join, resolve} from 'path';
+import {basename, isAbsolute, join, resolve} from 'node:path';
 import {isObject, isString, merge} from 'lodash';
 import {SecretsLoaderOptions} from '../interfaces/secrets-loader-options.interface';
 import {SecretsProvider} from '../interfaces/secrets-provider.interface';
@@ -15,87 +15,23 @@ export class SecretsLoaderService {
     private readonly logger = new Logger(SecretsLoaderService.name);
 
     /**
-     * Finds the application root directory
-     * (Usually one level up from where this code is running in a typical NestJS app)
-     */
-    private findAppRootDirectory(): string {
-        // Get the directory of the currently executing file
-        let currentDir = __dirname;
-
-        // For a compiled app, we may be in dist/, so go up one level
-        if (currentDir.endsWith('/dist') || currentDir.endsWith('\\dist')) {
-            currentDir = resolve(currentDir, '..');
-        }
-
-        // If we're in src/ or lib/, go up one level
-        if (currentDir.endsWith('/src') || currentDir.endsWith('\\src') ||
-            currentDir.endsWith('/lib') || currentDir.endsWith('\\lib')) {
-            currentDir = resolve(currentDir, '..');
-        }
-
-        // Handle the case where we might be in a deeper directory structure
-        const nodeModulesIndex = currentDir.indexOf('node_modules');
-        if (nodeModulesIndex > -1) {
-            currentDir = currentDir.substring(0, nodeModulesIndex);
-        }
-
-        return currentDir;
-    }
-
-    /**
-     * Resolves the base directory for configuration files
-     */
-    private resolveBaseDirectory(baseDir?: string): string {
-        const appRoot = this.findAppRootDirectory();
-
-        // If no base directory specified, use <app_root>/config
-        if (!baseDir) {
-            const configDir = join(appRoot, 'config');
-            this.logger.debug(`No base directory specified, using: ${configDir}`);
-            return configDir;
-        }
-
-        // If it's an absolute path, use it directly
-        if (isAbsolute(baseDir)) {
-            return baseDir;
-        }
-
-        // If it starts with ./ or ../, resolve relative to current working directory
-        if (baseDir.startsWith('./') || baseDir.startsWith('../')) {
-            return resolve(process.cwd(), baseDir);
-        }
-
-        // If it's just a directory name, resolve from app root
-        return join(appRoot, baseDir);
-    }
-
-    /**
-     * Loads configuration and resolves secrets
+     * Creates a config factory for use with ConfigModule.forRoot()
      * @param options Configuration options
-     * @returns ConfigService instance
+     * @returns A config factory function
      */
-    public async load(options: SecretsLoaderOptions): Promise<ConfigService> {
-        const provider = await this.loadProvider(options);
-        const config = await this.loadConfigFiles(provider, options);
-        return new ConfigService(config);
+    public createConfigFactory(options: SecretsLoaderOptions): ConfigFactory {
+        return async () => {
+            const provider = await this.loadProvider(options);
+            return await this.loadConfigFiles(provider, options);
+        };
     }
 
-    public async loadProvider(options: SecretsLoaderOptions): Promise<SecretsProvider | undefined> {
-        if (typeof options.provider === 'object') {
-            return options.provider;
-        }
-
-        if (typeof options.provider === 'string' && options.client) {
-            return this.createSecretProvider(options.provider, options.client);
-        }
-
-        if (options.client) {
-            return this.createSecretProvider(options.client.constructor.name, options.client);
-        }
-
-        return undefined;
-    }
-
+    /**
+     * Creates a secrets provider based on the provided key and client.
+     * @param key The provider type identifier
+     * @param client The client instance to be used by the provider
+     * @returns A promise that resolves to the created SecretsProvider or undefined if not supported
+     */
     async createSecretProvider(key: string, client: any): Promise<SecretsProvider | undefined> {
         switch (key) {
             case 'AwsSecretsManagerProvider':
@@ -120,17 +56,47 @@ export class SecretsLoaderService {
         return undefined;
     }
 
+    /**
+     * Finds the application root directory
+     * (Usually one level up from where this code is running in a typical NestJS app)
+     */
+    private findAppRootDirectory(): string {
+        // Get the directory of the currently executing file
+        let currentDir = __dirname;
+
+        const specialDirs = ['dist', 'src', 'lib'];
+
+        // Check if we're in a special directory and move up if needed
+        const dirName = basename(currentDir);
+        if (specialDirs.includes(dirName)) {
+            currentDir = resolve(currentDir, '..');
+        }
+
+        // Handle the case where we might be in a deeper directory structure
+        const nodeModulesIndex = currentDir.indexOf('node_modules');
+        if (nodeModulesIndex > -1) {
+            currentDir = currentDir.substring(0, nodeModulesIndex);
+        }
+
+        return currentDir;
+    }
 
     /**
-     * Creates a config factory for use with ConfigModule.forRoot()
-     * @param options Configuration options
-     * @returns A config factory function
+     * Determines if the path is specified relative to the current working directory
      */
-    public createConfigFactory(options: SecretsLoaderOptions): ConfigFactory {
-        return async () => {
-            const provider = await this.loadProvider(options);
-            return await this.loadConfigFiles(provider, options);
-        };
+    private isRelativePathFromCwd(path: string): boolean {
+        return path.startsWith('./') || path.startsWith('../');
+    }
+
+    /**
+     * Loads configuration and resolves secrets
+     * @param options Configuration options
+     * @returns ConfigService instance
+     */
+    public async load(options: SecretsLoaderOptions): Promise<ConfigService> {
+        const provider = await this.loadProvider(options);
+        const config = await this.loadConfigFiles(provider, options);
+        return new ConfigService(config);
     }
 
     /**
@@ -184,6 +150,57 @@ export class SecretsLoaderService {
         }
 
         return mergedConfig;
+    }
+
+    public async loadProvider(options: SecretsLoaderOptions): Promise<SecretsProvider | undefined> {
+        if (typeof options.provider === 'object') {
+            return options.provider;
+        }
+
+        if (typeof options.provider === 'string' && options.client) {
+            return this.createSecretProvider(options.provider, options.client);
+        }
+
+        if (options.client) {
+            return this.createSecretProvider(options.client.constructor.name, options.client);
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Resolves the base directory for configuration files based on the provided configuration
+     * or defaults to the application's standard config directory
+     */
+    private resolveBaseDirectory(directoryPath?: string): string {
+        const appRoot = this.findAppRootDirectory();
+
+        // If no directory path is specified, use the default config location
+        if (!directoryPath) {
+            return this.resolveDefaultConfigDirectory(appRoot, 'config');
+        }
+
+        // If it's an absolute path, use it directly
+        if (isAbsolute(directoryPath)) {
+            return directoryPath;
+        }
+
+        // Resolve from the current working directory
+        if (this.isRelativePathFromCwd(directoryPath)) {
+            return resolve(process.cwd(), directoryPath);
+        }
+
+        // If it's just a directory name, resolve from app root
+        return join(appRoot, directoryPath);
+    }
+
+    /**
+     * Resolves the default configuration directory path and logs it
+     */
+    private resolveDefaultConfigDirectory(appRoot: string, configDir: string): string {
+        configDir = join(appRoot, configDir);
+        this.logger.debug(`No base directory specified, using: ${configDir}`);
+        return configDir;
     }
 
     /**

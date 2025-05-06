@@ -1,11 +1,24 @@
+import {SecretsLoaderService, SecretsProvider} from '../../src';
+import {AwsSecretsManagerProvider} from '../../src/providers/aws-secrets-manager.provider';
+import {AwsParameterStoreProvider} from '../../src/providers/aws-parameter-store.provider';
+import {AzureKeyVaultProvider} from '../../src/providers/azure-key-vault.provider';
+import {GoogleSecretManagerProvider} from '../../src/providers/google-secret-manager.provider';
 import {Test, TestingModule} from '@nestjs/testing';
-import * as fs from 'fs';
-import * as path from 'path';
-import {SecretsLoaderService, SecretsProvider} from '../src';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import {SecretsManager} from '@aws-sdk/client-secrets-manager';
+import {SSMClient} from '@aws-sdk/client-ssm';
+import {SecretClient} from '@azure/keyvault-secrets';
+import {SecretManagerServiceClient} from '@google-cloud/secret-manager';
+import {DefaultAzureCredential} from '@azure/identity';
 
-// For mocking fs in some tests
-jest.mock('fs', () => {
-    const originalModule = jest.requireActual('fs');
+jest.mock('../../src/providers/aws-secrets-manager.provider');
+jest.mock('../../src/providers/aws-parameter-store.provider');
+jest.mock('../../src/providers/azure-key-vault.provider');
+jest.mock('../../src/providers/google-secret-manager.provider');
+
+jest.mock('node:fs', () => {
+    const originalModule = jest.requireActual('node:fs');
     return {
         ...originalModule,
         existsSync: jest.fn(),
@@ -13,11 +26,11 @@ jest.mock('fs', () => {
     };
 });
 
-describe('ConfigLoader', () => {
+describe('SecretsLoaderService', () => {
     let configLoader: SecretsLoaderService;
 
     // Path to our fixtures
-    const fixturesDir = path.join(__dirname, 'fixtures');
+    const fixturesDir = path.join(__dirname, '../fixtures');
 
     beforeEach(async () => {
         jest.clearAllMocks();
@@ -205,5 +218,97 @@ describe('ConfigLoader', () => {
         // Check both nested secrets were resolved
         expect(result.get('nested.secret')).toEqual('resolved-nested-secret');
         expect(result.get('nested.deeper.secret')).toEqual('resolved-deeper-secret');
+    });
+});
+
+describe('SecretsLoaderService - createSecretProvider', () => {
+    let service: SecretsLoaderService;
+
+    beforeEach(() => {
+        service = new SecretsLoaderService();
+    });
+
+    it('should return an AwsSecretsManagerProvider instance when the key is "AwsSecretsManagerProvider"', async () => {
+        const mockClient = {};
+        const provider = await service.createSecretProvider('AwsSecretsManagerProvider', mockClient);
+
+        expect(provider).toBeInstanceOf(AwsSecretsManagerProvider);
+        expect(AwsSecretsManagerProvider).toHaveBeenCalledWith(mockClient);
+    });
+
+    it('should return an AwsParameterStoreProvider instance when the key is "AwsParameterStoreProvider"', async () => {
+        const mockClient = {};
+        const provider = await service.createSecretProvider('AwsParameterStoreProvider', mockClient);
+
+        expect(provider).toBeInstanceOf(AwsParameterStoreProvider);
+        expect(AwsParameterStoreProvider).toHaveBeenCalledWith(mockClient);
+    });
+
+    it('should return an AzureKeyVaultProvider instance when the key is "AzureKeyVaultProvider"', async () => {
+        const mockClient = {};
+        const provider = await service.createSecretProvider('AzureKeyVaultProvider', mockClient);
+
+        expect(provider).toBeInstanceOf(AzureKeyVaultProvider);
+        expect(AzureKeyVaultProvider).toHaveBeenCalledWith(mockClient);
+    });
+
+    it('should return a GoogleSecretManagerProvider instance when the key is "GoogleSecretManagerProvider"', async () => {
+        const mockClient = {};
+        const provider = await service.createSecretProvider('GoogleSecretManagerProvider', mockClient);
+
+        expect(provider).toBeInstanceOf(GoogleSecretManagerProvider);
+        expect(GoogleSecretManagerProvider).toHaveBeenCalledWith(mockClient);
+    });
+
+    it('should return undefined and log a warning if the provider key is unsupported', async () => {
+        const mockClient = {constructor: {name: 'UnsupportedClient'}};
+
+        const logger = (service as any).logger;
+        const loggerSpy = jest.spyOn(logger, 'warn');
+
+        const provider = await service.createSecretProvider('UnsupportedProvider', mockClient);
+
+        expect(provider).toBeUndefined();
+        expect(loggerSpy).toHaveBeenCalledWith('Unsupported secret provider: UnsupportedClient');
+    });
+});
+
+describe('SecretsLoaderService - createSecretProviderViaClient', () => {
+    let service: SecretsLoaderService;
+
+    beforeEach(() => {
+        service = new SecretsLoaderService();
+    });
+
+    it('should return an AwsSecretsManagerProvider instance when the key is "SecretManager"', async () => {
+        const mockClient = new SecretsManager();
+        const provider = await service.createSecretProvider(mockClient.constructor.name, mockClient);
+
+        expect(provider).toBeInstanceOf(AwsSecretsManagerProvider);
+        expect(AwsSecretsManagerProvider).toHaveBeenCalledWith(mockClient);
+    });
+
+    it('should return an AwsParameterStoreProvider instance when the key is "SSMClient"', async () => {
+        const mockClient = new SSMClient({});
+        const provider = await service.createSecretProvider(mockClient.constructor.name, mockClient);
+
+        expect(provider).toBeInstanceOf(AwsParameterStoreProvider);
+        expect(AwsParameterStoreProvider).toHaveBeenCalledWith(mockClient);
+    });
+
+    it('should return an AzureKeyVaultProvider instance when the key is "SecretClient"', async () => {
+        const mockClient = new SecretClient('', new DefaultAzureCredential());
+        const provider = await service.createSecretProvider(mockClient.constructor.name, mockClient);
+
+        expect(provider).toBeInstanceOf(AzureKeyVaultProvider);
+        expect(AzureKeyVaultProvider).toHaveBeenCalledWith(mockClient);
+    });
+
+    it('should return a GoogleSecretManagerProvider instance when the key is "SecretManagerServiceClient"', async () => {
+        const mockClient = new SecretManagerServiceClient();
+        const provider = await service.createSecretProvider(mockClient.constructor.name, mockClient);
+
+        expect(provider).toBeInstanceOf(GoogleSecretManagerProvider);
+        expect(GoogleSecretManagerProvider).toHaveBeenCalledWith(mockClient);
     });
 });

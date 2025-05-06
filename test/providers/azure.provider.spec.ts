@@ -131,7 +131,7 @@ describe('AzureKeyVaultProvider', () => {
 
             // Setup mock response with an empty value
             mockClient.getSecret.mockResolvedValue({
-                name: 'my-secret',
+                name: 'empty-secret',
                 value: '',
                 properties: {
                     vaultUrl: 'https://my-vault.vault.azure.net',
@@ -143,7 +143,7 @@ describe('AzureKeyVaultProvider', () => {
             } as any);
 
             // Check that attempting to resolve an empty secret throws an error
-            await expect(provider.resolveSecret(secretRef)).rejects.toThrow('Secret value is empty');
+            await expect(provider.resolveSecret(secretRef)).rejects.toThrow('Secret \'empty-secret\' was retrieved but has an empty value');
         });
 
         it('should throw an error if the secret value is undefined', async () => {
@@ -151,7 +151,7 @@ describe('AzureKeyVaultProvider', () => {
 
             // Setup mock response with no value
             mockClient.getSecret.mockResolvedValue({
-                name: 'my-secret',
+                name: 'missing-secret',
                 value: undefined,
                 properties: {
                     vaultUrl: 'https://my-vault.vault.azure.net',
@@ -163,7 +163,7 @@ describe('AzureKeyVaultProvider', () => {
             } as any);
 
             // Check that attempting to resolve a missing value throws an error
-            await expect(provider.resolveSecret(secretRef)).rejects.toThrow('Secret value is empty');
+            await expect(provider.resolveSecret(secretRef)).rejects.toThrow('Secret \'missing-secret\' was retrieved but has an empty value');
         });
 
         it('should throw an error if secret access fails', async () => {

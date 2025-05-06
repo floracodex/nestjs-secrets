@@ -141,7 +141,7 @@ describe('GoogleSecretManagerProvider', () => {
             mockClient.accessSecretVersion.mockResolvedValue(mockResponse);
 
             // Check that attempting to resolve a secret with missing data throws an error
-            await expect(provider.resolveSecret(secretRef)).rejects.toThrow('Secret data is missing');
+            await expect(provider.resolveSecret(secretRef)).rejects.toThrow('Secret payload data is missing');
         });
 
         it('should handle service errors properly', async () => {

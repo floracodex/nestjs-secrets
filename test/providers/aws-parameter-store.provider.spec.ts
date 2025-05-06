@@ -167,7 +167,7 @@ describe('AwsParameterStoreProvider', () => {
             mockClient.send.mockResolvedValue(mockResponse);
 
             // Check that attempting to resolve a missing parameter throws an error
-            await expect(provider.resolveSecret(paramRef)).rejects.toThrow('Parameter value is empty');
+            await expect(provider.resolveSecret(paramRef)).rejects.toThrow('Parameter not found: /missing-para');
         });
 
         it('should throw an error if parameter access fails', async () => {
