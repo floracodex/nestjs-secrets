@@ -8,7 +8,6 @@ export class AzureKeyVaultProvider implements SecretsProvider {
 
     /**
      * Regular expression to validate Azure Vault paths.
-     * Matches either:
      * - Standard format: https://<vault-name>.vault.azure.net/secrets/<secret-name>
      * - With versions: https://<vault-name>.vault.azure.net/secrets/<secret-name>/<version>
      * - With paths in secret names: https://<vault-name>.vault.azure.net/secrets/<path>/<secret-name>
@@ -58,7 +57,7 @@ export class AzureKeyVaultProvider implements SecretsProvider {
             throw new Error(`Invalid Azure Key Vault secret reference: ${secretRef}. Expected format: https://<vault-name>.vault.azure.net/secrets/<secret-name>[/<version>]`);
         }
 
-        // Extract the vault name (match[1]) and secret name (match[2])
+        // Extract the vault name (match[0]) and secret name (match[1])
         const vaultName = match[0];
         const secretName = match[1];
 
