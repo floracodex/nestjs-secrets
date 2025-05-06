@@ -127,13 +127,13 @@ database:
     port: 5432
     username: db-user
     # This value will be fetched from a secret manager
-    password: 'ssm:/my-app/dev/db-password' # Example for AWS Parameter Store
+    password: 'arn:aws:ssm:us-east-1:123456789012:parameter/myapplication/dev/api_key' # Example for AWS Parameter Store
 
 featureFlags:
     newDashboard: true
 ```
 
-In this example, `ssm:/my-app/dev/db-password` is a reference to a secret. `NestJS Secrets` will automatically resolve this to its actual value if a suitable secret provider is configured. The specific reference format depends on the cloud provider (details in Section 4: Using with Cloud Providers).
+In this example, `arn:aws:ssm:us-east-1:123456789012:parameter/myapplication/dev/api_key` is a reference to a secret. `NestJS Secrets` will automatically resolve this to its actual value if a suitable secret provider is configured. The specific reference format depends on the cloud provider (details in Section 4: Using with Cloud Providers).
 
 You can also have environment-specific files, like `settings.local.yaml`, to override values for local development:
 
@@ -184,7 +184,7 @@ export class AppModule {
 
 #### Enabling Secret Resolution from Cloud Providers:
 
-To resolve secret references (like `'ssm:/path/to/secret'`) from cloud providers, you need to provide an initialized SDK client for that provider.
+To resolve secret references (like `'arn:aws:ssm:us-east-1:123456789012:parameter/myapplication/api_key'`) from cloud providers, you need to provide an initialized SDK client for that provider.
 
 * **Auto-detection (Recommended for built-in providers):**
 
@@ -534,7 +534,7 @@ When a string value in your configuration files matches one of these recognized 
 
 Always ensure the string in your YAML/JSON configuration value is the exact, complete native identifier that your cloud provider uses for the secret you wish to retrieve. This approach allows you to use identifiers you're already familiar with from your cloud environment.
 
-## 5. Configuration
+## Configuration
 
 This section explains how to organize and manage your configuration files when using `NestJS Secrets`. The library provides flexibility in terms of file formats, directory structures, and handling environment-specific settings.
 
