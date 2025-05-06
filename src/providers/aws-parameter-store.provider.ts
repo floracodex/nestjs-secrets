@@ -1,13 +1,13 @@
 import {Injectable, Logger} from '@nestjs/common';
-import {SecretProvider} from '../interfaces';
-import {Parameter, SSM} from '@aws-sdk/client-ssm';
+import {GetParameterCommand, GetParametersByPathCommand, Parameter, SSMClient} from '@aws-sdk/client-ssm';
+import {SecretsProvider} from '../interfaces/secrets-provider.interface';
 
 @Injectable()
-export class AwsParameterStoreProvider implements SecretProvider {
+export class AwsParameterStoreProvider implements SecretsProvider {
     private readonly logger = new Logger(AwsParameterStoreProvider.name);
-    private readonly parameterPathPattern = /^\/[a-zA-Z0-9_/.~-]+$/;
+    private readonly parameterPathPattern = /^(?:\/[a-zA-Z0-9_./-]+|arn:[a-z-]+:ssm:[a-z0-9-]+:\d{12}:parameter\/[a-zA-Z0-9_./-]+)$/;
 
-    constructor(private readonly client: SSM) {
+    constructor(private readonly client: SSMClient) {
     }
 
     isSecretReference(value: string): boolean {
@@ -19,11 +19,14 @@ export class AwsParameterStoreProvider implements SecretProvider {
             // Get the parameter by path with recursion
             if (secretRef.endsWith('/*')) {
                 const basePath = secretRef.slice(0, -2);
-                const response = await this.client.getParametersByPath({
+
+                const command = new GetParametersByPathCommand({
                     Path: basePath,
                     WithDecryption: true,
                     Recursive: true
                 });
+
+                const response = await this.client.send(command);
 
                 if (!response.Parameters || response.Parameters.length === 0) {
                     throw new Error(`No parameters found at path: ${basePath}`);
@@ -34,10 +37,11 @@ export class AwsParameterStoreProvider implements SecretProvider {
             }
 
             // Get a single parameter
-            const response = await this.client.getParameter({
+            const command = new GetParameterCommand({
                 Name: secretRef,
                 WithDecryption: true
-            });
+            })
+            const response = await this.client.send(command);
 
             if (!response.Parameter || !response.Parameter.Value) {
                 throw new Error('Parameter value is empty');

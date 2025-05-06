@@ -1,15 +1,17 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { SecretManagerServiceClient } from '@google-cloud/secret-manager';
-import { SecretProvider } from '../interfaces';
+import {Injectable, Logger} from '@nestjs/common';
+import {SecretManagerServiceClient} from '@google-cloud/secret-manager';
+import {SecretsProvider} from '../interfaces/secrets-provider.interface';
 
 @Injectable()
-export class GoogleSecretManagerProvider implements SecretProvider {
+export class GoogleSecretManagerProvider implements SecretsProvider {
     private readonly logger = new Logger(GoogleSecretManagerProvider.name);
     private readonly secretPathPattern = /^projects\/[^/]+\/secrets\/[^/]+\/versions\/[^/]+$/;
 
-    constructor(private readonly client: SecretManagerServiceClient) {}
+    constructor(private readonly client: SecretManagerServiceClient) {
+    }
 
     isSecretReference(value: string): boolean {
+
         return this.secretPathPattern.test(value);
     }
 

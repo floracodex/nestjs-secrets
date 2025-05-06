@@ -1,6 +1,6 @@
 import {Test, TestingModule} from '@nestjs/testing';
-import {GoogleSecretManagerProvider} from '../../src';
 import {SecretManagerServiceClient} from '@google-cloud/secret-manager';
+import { GoogleSecretManagerProvider } from '../../src/providers/google-secret-manager.provider';
 
 describe('GoogleSecretManagerProvider', () => {
     let provider: GoogleSecretManagerProvider;

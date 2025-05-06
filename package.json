@@ -1,5 +1,5 @@
 {
-  "name": "@floracodex/nest-config-secrets",
+  "name": "@floracodex/nestjs-secrets",
   "version": "1.0.0",
   "description": "A cloud-agnostic configuration loader for NestJS with secret management integration",
   "keywords": [

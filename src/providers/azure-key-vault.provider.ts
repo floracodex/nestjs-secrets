@@ -1,10 +1,10 @@
 import {Injectable, Logger} from '@nestjs/common';
-import {SecretProvider} from '../interfaces';
 import { SecretClient } from '@azure/keyvault-secrets';
+import {SecretsProvider} from '../interfaces/secrets-provider.interface';
 
 // Note: You would typically add @azure/keyvault-secrets as an optional peer dependency
 @Injectable()
-export class AzureKeyVaultProvider implements SecretProvider {
+export class AzureKeyVaultProvider implements SecretsProvider {
     private readonly logger = new Logger(AzureKeyVaultProvider.name);
     // Improved regex for Azure Key Vault URLs
     // This pattern matches:

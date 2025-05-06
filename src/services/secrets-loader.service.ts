@@ -1,28 +1,18 @@
-import {Logger} from '@nestjs/common';
+import {Injectable, Logger} from '@nestjs/common';
 import {ConfigFactory, ConfigService} from '@nestjs/config';
 import {existsSync, readFileSync} from 'fs';
 import * as yaml from 'js-yaml';
 import {isAbsolute, join, resolve} from 'path';
 import {isObject, isString, merge} from 'lodash';
-import {SecretProvider} from './interfaces';
-
-export interface ConfigLoaderOptions {
-    /**
-     * Base directory for config files (absolute or relative).
-     * If relative and not specified, defaults to <app_root>/config
-     * If just a directory name is given (e.g. 'config'), it's resolved relative to app root
-     */
-    directory?: string;
-    files: string[];
-    provider?: SecretProvider;
-    fileType?: 'yaml' | 'json';
-}
+import {SecretsLoaderOptions} from '../interfaces/secrets-loader-options.interface';
+import {SecretsProvider} from '../interfaces/secrets-provider.interface';
 
 /**
  * Configuration loader with support for secret resolution
  */
-export class ConfigLoader {
-    private readonly logger = new Logger(ConfigLoader.name);
+@Injectable()
+export class SecretsLoaderService {
+    private readonly logger = new Logger(SecretsLoaderService.name);
 
     /**
      * Finds the application root directory
@@ -84,32 +74,76 @@ export class ConfigLoader {
      * @param options Configuration options
      * @returns ConfigService instance
      */
-    public async load(options: ConfigLoaderOptions): Promise<ConfigService> {
-        const config = await this.loadConfigFiles(options);
+    public async load(options: SecretsLoaderOptions): Promise<ConfigService> {
+        const provider = await this.loadProvider(options);
+        const config = await this.loadConfigFiles(provider, options);
         return new ConfigService(config);
     }
+
+    public async loadProvider(options: SecretsLoaderOptions): Promise<SecretsProvider | undefined> {
+        if (typeof options.provider === 'object') {
+            return options.provider;
+        }
+
+        if (typeof options.provider === 'string' && options.client) {
+            return this.createSecretProvider(options.provider, options.client);
+        }
+
+        if (options.client) {
+            return this.createSecretProvider(options.client.constructor.name, options.client);
+        }
+
+        return undefined;
+    }
+
+    async createSecretProvider(key: string, client: any): Promise<SecretsProvider | undefined> {
+        switch (key) {
+            case 'AwsSecretsManagerProvider':
+            case 'SecretsManager':
+                const {AwsSecretsManagerProvider} = await import('../providers/aws-secrets-manager.provider');
+                return new AwsSecretsManagerProvider(client);
+            case 'AwsParameterStoreProvider':
+            case 'SSMClient':
+                const {AwsParameterStoreProvider} = await import('../providers/aws-parameter-store.provider');
+                return new AwsParameterStoreProvider(client);
+            case 'AzureKeyVaultProvider':
+            case 'SecretClient':
+                const {AzureKeyVaultProvider} = await import('../providers/azure-key-vault.provider');
+                return new AzureKeyVaultProvider(client);
+            case 'GoogleSecretManagerProvider':
+            case 'SecretManagerServiceClient':
+                const {GoogleSecretManagerProvider} = await import('../providers/google-secret-manager.provider');
+                return new GoogleSecretManagerProvider(client);
+        }
+
+        this.logger.warn(`Unsupported secret provider: ${client.constructor.name}`);
+        return undefined;
+    }
+
 
     /**
      * Creates a config factory for use with ConfigModule.forRoot()
      * @param options Configuration options
      * @returns A config factory function
      */
-    public createConfigFactory(options: ConfigLoaderOptions): ConfigFactory {
+    public createConfigFactory(options: SecretsLoaderOptions): ConfigFactory {
         return async () => {
-            return await this.loadConfigFiles(options);
+            const provider = await this.loadProvider(options);
+            return await this.loadConfigFiles(provider, options);
         };
     }
 
     /**
      * Loads and merges configuration files, resolving secrets if a provider is available
+     * @param provider The instantiated secret provider
      * @param options Configuration options
      * @returns Merged configuration object
      */
-    private async loadConfigFiles(options: ConfigLoaderOptions): Promise<Record<string, any>> {
-        const { files, provider, fileType = 'yaml' } = options;
+    private async loadConfigFiles(provider: SecretsProvider | undefined, options: SecretsLoaderOptions): Promise<Record<string, any>> {
+        const {files, fileType = 'yaml'} = options;
 
         // Resolve the base directory
-        const baseDirectory = this.resolveBaseDirectory(options.directory);
+        const baseDirectory = this.resolveBaseDirectory(options.root);
 
         if (!files.length) {
             this.logger.warn('No configuration files specified');
@@ -158,7 +192,7 @@ export class ConfigLoader {
     private async resolveSecrets(
         config: Record<string, any>,
         path: string = '',
-        secretProvider: SecretProvider
+        secretProvider: SecretsProvider
     ): Promise<void> {
         for (const key in config) {
             const fullPath = path ? `${path}.${key}` : key;

@@ -1,10 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SecretProvider } from '../interfaces';
 import {SecretsManager} from '@aws-sdk/client-secrets-manager';
+import {SecretsProvider} from '../interfaces/secrets-provider.interface';
 
 // Note: You would typically add aws-sdk as an optional peer dependency
 @Injectable()
-export class AwsSecretsManagerProvider implements SecretProvider {
+export class AwsSecretsManagerProvider implements SecretsProvider {
     private readonly logger = new Logger(AwsSecretsManagerProvider.name);
     private readonly arnPattern = /^arn:aws:secretsmanager:[a-z0-9-]+:[0-9]+:secret:.+$/;
 

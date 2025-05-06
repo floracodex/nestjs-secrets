@@ -1,8 +1,7 @@
 import {Test, TestingModule} from '@nestjs/testing';
 import * as fs from 'fs';
 import * as path from 'path';
-import {ConfigLoader} from '../src/config-loader';
-import {SecretProvider} from '../src';
+import {SecretsLoaderService, SecretsProvider} from '../src';
 
 // For mocking fs in some tests
 jest.mock('fs', () => {
@@ -15,7 +14,7 @@ jest.mock('fs', () => {
 });
 
 describe('ConfigLoader', () => {
-    let configLoader: ConfigLoader;
+    let configLoader: SecretsLoaderService;
 
     // Path to our fixtures
     const fixturesDir = path.join(__dirname, 'fixtures');
@@ -24,10 +23,10 @@ describe('ConfigLoader', () => {
         jest.clearAllMocks();
 
         const module: TestingModule = await Test.createTestingModule({
-            providers: [ConfigLoader]
+            providers: [SecretsLoaderService]
         }).compile();
 
-        configLoader = module.get<ConfigLoader>(ConfigLoader);
+        configLoader = module.get<SecretsLoaderService>(SecretsLoaderService);
 
         // Reset fs mocks to default behavior when needed
         (fs.existsSync as jest.Mock).mockImplementation(path =>
@@ -46,7 +45,7 @@ describe('ConfigLoader', () => {
         // Basic loading test with actual files
         it('should load and merge actual config files from fixtures', async () => {
             const result = await configLoader.load({
-                directory: fixturesDir,
+                root: fixturesDir,
                 files: ['local.yaml', 'env.yaml']
             });
 
@@ -75,7 +74,7 @@ describe('ConfigLoader', () => {
             });
 
             const result = await configLoader.load({
-                directory: '/fake/path',
+                root: '/fake/path',
                 files: ['config.yaml', 'env.yaml']
             });
 
@@ -93,7 +92,7 @@ describe('ConfigLoader', () => {
             );
 
             // Mock secret provider
-            const mockSecretProvider: SecretProvider = {
+            const mockSecretProvider: SecretsProvider = {
                 isSecretReference: jest.fn().mockImplementation(
                     (value) => value === 'projects/123/secrets/api-key/versions/latest'
                 ),
@@ -101,7 +100,7 @@ describe('ConfigLoader', () => {
             };
 
             const result = await configLoader.load({
-                directory: '/fake/path',
+                root: '/fake/path',
                 files: ['config.yaml'],
                 provider: mockSecretProvider
             });
@@ -122,7 +121,7 @@ describe('ConfigLoader', () => {
             );
 
             await configLoader.load({
-                directory: 'config',
+                root: 'config',
                 files: ['local.yaml']
             });
 
@@ -138,7 +137,7 @@ describe('ConfigLoader', () => {
             (fs.existsSync as jest.Mock).mockReturnValue(false);
 
             const result = await configLoader.load({
-                directory: '/fake/path',
+                root: '/fake/path',
                 files: ['nonexistent.yaml']
             });
 
@@ -152,7 +151,7 @@ describe('ConfigLoader', () => {
             (fs.readFileSync as jest.Mock).mockReturnValue('{ "jsonKey": "jsonValue" }');
 
             const result = await configLoader.load({
-                directory: '/fake/path',
+                root: '/fake/path',
                 files: ['config.json'],
                 fileType: 'json'
             });
@@ -168,7 +167,7 @@ describe('ConfigLoader', () => {
             (fs.readFileSync as jest.Mock).mockReturnValue('test: value');
 
             const factory = configLoader.createConfigFactory({
-                directory: '/fake/path',
+                root: '/fake/path',
                 files: ['config.yaml']
             });
 
@@ -188,7 +187,7 @@ describe('ConfigLoader', () => {
         );
 
         // Mock provider that identifies all secrets
-        const mockSecretProvider: SecretProvider = {
+        const mockSecretProvider: SecretsProvider = {
             isSecretReference: jest.fn().mockImplementation(
                 (value) => value.includes('projects/')
             ),
@@ -198,7 +197,7 @@ describe('ConfigLoader', () => {
         };
 
         const result = await configLoader.load({
-            directory: '/fake/path',
+            root: '/fake/path',
             files: ['config.yaml'],
             provider: mockSecretProvider
         });
