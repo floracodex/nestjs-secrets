@@ -1,0 +1,6 @@
+# Use a local settings file to override the secret values used in production. This is
+# handy for local development. You should _not_ check this file into source control.
+
+db:
+    host: 'development.example.com'
+    password: 'LocallySetP@ssword'

@@ -1,0 +1,10 @@
+# Check this file into source control with your secret identifiers. This
+# example uses AWS Parameter Store to keep our secrets protected.
+
+db:
+    host: 'arn:aws:ssm:us-east-1:012345678901:parameter/prod/db/host'
+    user: 'arn:aws:ssm:us-east-1:012345678901:parameter/prod/db/user'
+    password: 'arn:aws:ssm:us-east-1:012345678901:parameter/prod/db/password'
+    database: 'arn:aws:ssm:us-east-1:012345678901:parameter/prod/db/database'
+
+
