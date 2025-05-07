@@ -30,55 +30,57 @@ npm install @floracodex/nestjs-secrets @nestjs/config
 
 ## Quick Start
 
-1. **Create a configuration file (e.g., `settings.yaml`):**
+### 1. Create a configuration file (e.g., `settings.yaml`):
 
-    ```yaml
-    # settings.yaml
-    db:
-        host: db.example.com
-        # Example: Native ARN for an AWS Parameter Store secret
-        password: 'arn:aws:ssm:us-east-1:123456789012:parameter/myapplication/dev/db_password'
-    ```
-1. **Import and configure `SecretsModule` in your `AppModule`:**
+```yaml
+# settings.yaml
+db:
+    host: db.example.com
+    # Example: Native ARN for an AWS Parameter Store secret
+    password: 'arn:aws:ssm:us-east-1:123456789012:parameter/myapplication/dev/db_password'
+```
 
-    ```typescript
-    // app.module.ts
-    import {Module} from '@nestjs/common';
-    import {SecretsModule} from '@floracodex/nestjs-secrets';
-    import {SSMClient} from '@aws-sdk/client-ssm'; // Example for AWS Parameter Store
-    
-    @Module({
-        imports: [
-            SecretsModule.forRoot({
-                // Provide the SDK client for your secret provider
-                client: new SSMClient({region: 'us-east-1'}),
-                files: ['settings.yaml'],
-                isGlobal: true,
-                cache: true
-            })
-        ]
-    })
-    export class AppModule {
+### 2. Import and configure `SecretsModule` in your `AppModule`:
+
+```typescript
+// app.module.ts
+import {Module} from '@nestjs/common';
+import {SecretsModule} from '@floracodex/nestjs-secrets';
+import {SSMClient} from '@aws-sdk/client-ssm'; // Example for AWS Parameter Store
+
+@Module({
+    imports: [
+        SecretsModule.forRoot({
+            // Provide the SDK client for your secret provider
+            client: new SSMClient({region: 'us-east-1'}),
+            files: ['settings.yaml'],
+            isGlobal: true,
+            cache: true
+        })
+    ]
+})
+export class AppModule {
+}
+```
+
+_NestJS Secrets often auto-detects the provider from the client. See the [Cloud Provider Guides on our Wiki](https://github.com/floracodex/nestjs-secrets/wiki/5.-Cloud-Provider-Integration-Guides) for specifics._
+
+### 3. Access configuration in your services:
+
+```typescript
+// any.service.ts
+import {Injectable} from '@nestjs/common';
+import {ConfigService} from '@nestjs/config';
+
+@Injectable()
+export class AnyService {
+    constructor(private configService: ConfigService) {
+        const dbPassword = this.configService.get<string>('db.password');
+        // db.password now holds the resolved secret value
     }
-    ```
+}
+```
 
-    _NestJS Secrets often auto-detects the provider from the client. See the [Cloud Provider Guides on our Wiki](https://github.com/floracodex/nestjs-secrets/wiki/5.-Cloud-Provider-Integration-Guides) for specifics._
-
-1. **Access configuration in your services:**
-
-    ```typescript
-    // any.service.ts
-    import {Injectable} from '@nestjs/common';
-    import {ConfigService} from '@nestjs/config';
-    
-    @Injectable()
-    export class AnyService {
-        constructor(private configService: ConfigService) {
-            const dbPassword = this.configService.get<string>('db.password');
-            // db.password now holds the resolved secret value
-        }
-    }
-    ```
 For more detailed examples and explanations, please see the [Basic Usage Guide on our Wiki](https://github.com/floracodex/nestjs-secrets/wiki/4.-Basic-Usage-Guide).
 
 ## Advanced Usage
