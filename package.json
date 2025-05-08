@@ -1,6 +1,6 @@
 {
   "name": "@floracodex/nestjs-secrets",
-  "version": "1.0.0-rc.0",
+  "version": "1.0.0-rc.1",
   "description": "A cloud-agnostic configuration loader for NestJS with secret management integration",
   "keywords": [
     "nestjs",
@@ -29,12 +29,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/floracodex/nest-config-secrets.git"
+    "url": "git+https://github.com/floracodex/nestjs-secrets.git"
   },
   "bugs": {
-    "url": "https://github.com/floracodex/nest-config-secrets/issues"
+    "url": "https://github.com/floracodex/nestjs-secrets/issues"
   },
-  "homepage": "https://github.com/floracodex/nest-config-secrets#readme",
+  "homepage": "https://github.com/floracodex/nestjs-secrets#readme",
   "jest": {
     "moduleFileExtensions": [
       "js",
