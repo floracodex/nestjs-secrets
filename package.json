@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "@aws-sdk/client-secrets-manager": "^3.803.0",
-    "@aws-sdk/client-ssm": "^3.803.0",
+    "@aws-sdk/client-ssm": "^3.804.0",
     "@azure/identity": "^4.9.1",
     "@azure/keyvault-secrets": "^4.9.0",
     "@eslint/eslintrc": "^3.2.0",
