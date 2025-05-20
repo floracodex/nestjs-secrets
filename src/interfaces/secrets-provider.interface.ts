@@ -29,4 +29,6 @@ export type SecretsProviderType =
     'AwsParameterStoreProvider' |
     'AwsSecretsManagerProvider' |
     'AzureKeyVaultProvider' |
-    'GoogleSecretManagerProvider';
+    'GoogleSecretManagerProvider' |
+    'HashicorpVaultProvider' |
+    'ConsulProvider';
