@@ -170,6 +170,28 @@ describe('AwsParameterStoreProvider', () => {
             await expect(provider.resolveSecret(paramRef)).rejects.toThrow('Parameter not found: /missing-para');
         });
 
+        it('should warn and exclude parameters with no value in a path lookup', async () => {
+            const pathRef = '/my-app/dev/*';
+
+            const mockResponse: GetParametersByPathCommandOutput = {
+                Parameters: [
+                    {Name: '/my-app/dev/key1', Type: 'String', Value: 'value1'},
+                    {Name: '/my-app/dev/key2', Type: 'String', Value: undefined},
+                    {Name: '/my-app/dev/key3', Type: 'String', Value: 'value3'}
+                ],
+                $metadata: {}
+            };
+
+            // @ts-expect-error: `never` type is inferred, which leads to type mismatch errors.
+            mockClient.send.mockResolvedValue(mockResponse);
+
+            const warnSpy = jest.spyOn((provider as any).logger, 'warn');
+            const result = await provider.resolveSecret(pathRef);
+
+            expect(warnSpy).toHaveBeenCalledWith('Parameter /my-app/dev/key2 has no value');
+            expect(result).toEqual(['value1', 'value3']);
+        });
+
         it('should throw an error if parameter access fails', async () => {
             const paramRef = '/access-denied-param';
 
