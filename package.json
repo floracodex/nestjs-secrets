@@ -64,7 +64,7 @@
     "@azure/identity": "^4.9.1",
     "@azure/keyvault-secrets": "^4.9.0",
     "@eslint/eslintrc": "^3.2.0",
-    "@eslint/js": "^9.18.0",
+    "@eslint/js": "^10.0.1",
     "@google-cloud/secret-manager": "^6.0.1",
     "@nestjs/cli": "^11.0.7",
     "@nestjs/testing": "^11.1.0",
