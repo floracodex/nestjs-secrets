@@ -25,7 +25,7 @@
     "@azure/keyvault-secrets": "^4.9.0",
     "@google-cloud/secret-manager": "^6.0.1",
     "@nestjs/common": "^11.0.1",
-    "@nestjs/config": "^4.0.3",
+    "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.1.15",
     "reflect-metadata": "^0.2.2",
