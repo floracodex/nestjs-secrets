@@ -273,6 +273,127 @@ describe('SecretsLoaderService - createSecretProvider', () => {
     });
 });
 
+describe('SecretsLoaderService - coverage gaps', () => {
+    let service: SecretsLoaderService;
+
+    beforeEach(async () => {
+        jest.clearAllMocks();
+
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [SecretsLoaderService]
+        }).compile();
+
+        service = module.get<SecretsLoaderService>(SecretsLoaderService);
+
+        (fs.existsSync as jest.Mock).mockReturnValue(false);
+        (fs.readFileSync as jest.Mock).mockReturnValue('');
+    });
+
+    describe('loadConfigFiles', () => {
+        it('should warn and return empty config when files array is empty', async () => {
+            const warnSpy = jest.spyOn((service as any).logger, 'warn');
+
+            const result = await service.load({root: '/fake', files: []});
+
+            expect(result.get('anything')).toBeUndefined();
+            expect(warnSpy).toHaveBeenCalledWith('No configuration files specified');
+        });
+
+        it('should log an error and skip a file with invalid YAML', async () => {
+            (fs.existsSync as jest.Mock).mockReturnValue(true);
+            (fs.readFileSync as jest.Mock).mockReturnValue(': invalid: yaml: {[unclosed');
+
+            const errorSpy = jest.spyOn((service as any).logger, 'error');
+
+            await service.load({root: '/fake', files: ['bad.yaml']});
+
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Failed to load config from')
+            );
+        });
+
+        it('should log an error and skip a file with invalid JSON', async () => {
+            (fs.existsSync as jest.Mock).mockReturnValue(true);
+            (fs.readFileSync as jest.Mock).mockReturnValue('{invalid json');
+
+            const errorSpy = jest.spyOn((service as any).logger, 'error');
+
+            await service.load({root: '/fake', files: ['bad.json'], fileType: 'json'});
+
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Failed to load config from')
+            );
+        });
+    });
+
+    describe('loadProvider', () => {
+        it('should auto-detect provider type from client constructor name when no provider string is given', async () => {
+            const client = new SSMClient({});
+
+            const provider = await service.loadProvider({files: [], client});
+
+            expect(provider).toBeInstanceOf(AwsParameterStoreProvider);
+        });
+    });
+
+    describe('resolveBaseDirectory', () => {
+        it('should log a debug message and use default config directory when root is not specified', async () => {
+            const debugSpy = jest.spyOn((service as any).logger, 'debug');
+
+            await service.load({files: ['config.yaml']});
+
+            expect(debugSpy).toHaveBeenCalledWith(
+                expect.stringMatching(/No base directory specified, using:.*config/)
+            );
+        });
+
+        it('should resolve ./-relative paths from the current working directory', async () => {
+            const resolveBaseDirectorySpy = jest.spyOn(service as any, 'resolveBaseDirectory');
+
+            await service.load({root: './myconfig', files: ['app.yaml']});
+
+            expect(resolveBaseDirectorySpy.mock.results[0].value).toBe(
+                path.resolve(process.cwd(), './myconfig')
+            );
+        });
+
+        it('should resolve ../-relative paths from the current working directory', async () => {
+            const resolveBaseDirectorySpy = jest.spyOn(service as any, 'resolveBaseDirectory');
+
+            await service.load({root: '../myconfig', files: ['app.yaml']});
+
+            expect(resolveBaseDirectorySpy.mock.results[0].value).toBe(
+                path.resolve(process.cwd(), '../myconfig')
+            );
+        });
+    });
+
+    describe('resolveSecrets', () => {
+        it('should log an error and preserve the original value when the provider throws during resolution', async () => {
+            (fs.existsSync as jest.Mock).mockReturnValue(true);
+            (fs.readFileSync as jest.Mock).mockReturnValue('db:\n  password: /secrets/db-password');
+
+            const failingProvider: SecretsProvider = {
+                isSecretReference: jest.fn().mockReturnValue(true),
+                resolveSecret: jest.fn().mockRejectedValue(new Error('Access denied'))
+            };
+            const errorSpy = jest.spyOn((service as any).logger, 'error');
+
+            const result = await service.load({
+                root: '/fake',
+                files: ['config.yaml'],
+                provider: failingProvider
+            });
+
+            expect(errorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Failed to load secret [db.password]: Access denied')
+            );
+            // Value is preserved as the original reference since resolution failed
+            expect(result.get('db.password')).toEqual('/secrets/db-password');
+        });
+    });
+});
+
 describe('SecretsLoaderService - createSecretProviderViaClient', () => {
     let service: SecretsLoaderService;
 
