@@ -1,4 +1,4 @@
-import {SecretsProvider, SecretsProviderType} from './secrets-provider.interface';
+import {type SecretsProvider, type SecretsProviderType} from './secrets-provider.interface';
 
 export interface SecretsLoaderOptions {
     provider?: SecretsProviderType | SecretsProvider;

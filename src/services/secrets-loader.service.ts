@@ -35,21 +35,25 @@ export class SecretsLoaderService {
     async createSecretProvider(key: string, client: any): Promise<SecretsProvider | undefined> {
         switch (key) {
             case 'AwsSecretsManagerProvider':
-            case 'SecretsManager':
+            case 'SecretsManager': {
                 const {AwsSecretsManagerProvider} = await import('../providers/aws-secrets-manager.provider');
                 return new AwsSecretsManagerProvider(client);
+            }
             case 'AwsParameterStoreProvider':
-            case 'SSMClient':
+            case 'SSMClient': {
                 const {AwsParameterStoreProvider} = await import('../providers/aws-parameter-store.provider');
                 return new AwsParameterStoreProvider(client);
+            }
             case 'AzureKeyVaultProvider':
-            case 'SecretClient':
+            case 'SecretClient': {
                 const {AzureKeyVaultProvider} = await import('../providers/azure-key-vault.provider');
                 return new AzureKeyVaultProvider(client);
+            }
             case 'GoogleSecretManagerProvider':
-            case 'SecretManagerServiceClient':
+            case 'SecretManagerServiceClient': {
                 const {GoogleSecretManagerProvider} = await import('../providers/google-secret-manager.provider');
                 return new GoogleSecretManagerProvider(client);
+            }
         }
 
         this.logger.warn(`Unsupported secret provider: ${client.constructor.name}`);
