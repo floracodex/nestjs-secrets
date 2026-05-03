@@ -1,5 +1,5 @@
-import {Test, TestingModule} from '@nestjs/testing';
-import {GetParameterCommandOutput, GetParametersByPathCommandOutput, SSM} from '@aws-sdk/client-ssm';
+import {Test, type TestingModule} from '@nestjs/testing';
+import {type GetParameterCommandOutput, type GetParametersByPathCommandOutput, type SSM} from '@aws-sdk/client-ssm';
 import {AwsParameterStoreProvider} from '../../src/providers/aws-parameter-store.provider';
 
 describe('AwsParameterStoreProvider', () => {

@@ -1,6 +1,6 @@
-import {Test, TestingModule} from '@nestjs/testing';
-import {SecretClient} from '@azure/keyvault-secrets';
-import { AzureKeyVaultProvider } from '../../src/providers/azure-key-vault.provider';
+import {Test, type TestingModule} from '@nestjs/testing';
+import {type SecretClient} from '@azure/keyvault-secrets';
+import {AzureKeyVaultProvider} from '../../src/providers/azure-key-vault.provider';
 
 describe('AzureKeyVaultProvider', () => {
     let provider: AzureKeyVaultProvider;

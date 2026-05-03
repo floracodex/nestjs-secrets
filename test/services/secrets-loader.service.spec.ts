@@ -1,9 +1,9 @@
-import {SecretsLoaderService, SecretsProvider} from '../../src';
+import {SecretsLoaderService, type SecretsProvider} from '../../src';
 import {AwsSecretsManagerProvider} from '../../src/providers/aws-secrets-manager.provider';
 import {AwsParameterStoreProvider} from '../../src/providers/aws-parameter-store.provider';
 import {AzureKeyVaultProvider} from '../../src/providers/azure-key-vault.provider';
 import {GoogleSecretManagerProvider} from '../../src/providers/google-secret-manager.provider';
-import {Test, TestingModule} from '@nestjs/testing';
+import {Test, type TestingModule} from '@nestjs/testing';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {SecretsManager} from '@aws-sdk/client-secrets-manager';
@@ -42,7 +42,7 @@ describe('SecretsLoaderService', () => {
         configLoader = module.get<SecretsLoaderService>(SecretsLoaderService);
 
         // Reset fs mocks to default behavior when needed
-        (fs.existsSync as jest.Mock).mockImplementation(path =>
+        (fs.existsSync as jest.Mock).mockImplementation((path) =>
             jest.requireActual('fs').existsSync(path)
         );
         (fs.readFileSync as jest.Mock).mockImplementation((path, options) =>
