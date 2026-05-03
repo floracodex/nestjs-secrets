@@ -1,6 +1,9 @@
 {
   "name": "@floracodex/nestjs-secrets",
   "version": "1.0.2",
+  "workspaces": [
+    "example"
+  ],
   "description": "A cloud-agnostic configuration loader for NestJS with secret management integration",
   "keywords": [
     "nestjs",
