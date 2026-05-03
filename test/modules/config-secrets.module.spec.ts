@@ -1,8 +1,8 @@
-import {Test, TestingModule} from '@nestjs/testing';
+import {Test, type TestingModule} from '@nestjs/testing';
 import {ConfigService} from '@nestjs/config';
 import * as path from 'path';
 import {SecretsModule} from '../../src';
-import {SecretManagerServiceClient} from '@google-cloud/secret-manager';
+import {type SecretManagerServiceClient} from '@google-cloud/secret-manager';
 
 describe('SecretConfigModule', () => {
     const fixturesDir = path.join(__dirname, '..', 'fixtures');
@@ -37,7 +37,7 @@ describe('SecretConfigModule', () => {
                         provider: 'GoogleSecretManagerProvider',
                         client: mockClient,
                         root: fixturesDir,
-                        files: ['secrets.yaml'],
+                        files: ['secrets.yaml']
                     })
                 ]
             }).compile();

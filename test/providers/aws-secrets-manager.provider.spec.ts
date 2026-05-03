@@ -1,6 +1,6 @@
-import {Test, TestingModule} from '@nestjs/testing';
-import {SecretsManager, GetSecretValueCommandOutput} from '@aws-sdk/client-secrets-manager';
-import { AwsSecretsManagerProvider } from '../../src/providers/aws-secrets-manager.provider';
+import {Test, type TestingModule} from '@nestjs/testing';
+import {type SecretsManager, type GetSecretValueCommandOutput} from '@aws-sdk/client-secrets-manager';
+import {AwsSecretsManagerProvider} from '../../src/providers/aws-secrets-manager.provider';
 
 describe('AwsSecretsManagerProvider', () => {
     let provider: AwsSecretsManagerProvider;

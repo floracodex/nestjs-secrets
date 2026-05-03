@@ -1,6 +1,6 @@
-import {Test, TestingModule} from '@nestjs/testing';
-import {SecretManagerServiceClient} from '@google-cloud/secret-manager';
-import { GoogleSecretManagerProvider } from '../../src/providers/google-secret-manager.provider';
+import {Test, type TestingModule} from '@nestjs/testing';
+import {type SecretManagerServiceClient} from '@google-cloud/secret-manager';
+import {GoogleSecretManagerProvider} from '../../src/providers/google-secret-manager.provider';
 
 describe('GoogleSecretManagerProvider', () => {
     let provider: GoogleSecretManagerProvider;
@@ -16,7 +16,7 @@ describe('GoogleSecretManagerProvider', () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [{
                 provide: GoogleSecretManagerProvider,
-                useFactory: () => new GoogleSecretManagerProvider(mockClient as SecretManagerServiceClient)
+                useFactory: () => new GoogleSecretManagerProvider(mockClient)
             }]
         }).compile();
 
