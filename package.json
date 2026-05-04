@@ -68,7 +68,7 @@
     "@aws-sdk/client-ssm": "^3.1041.0",
     "@azure/identity": "^4.9.1",
     "@azure/keyvault-secrets": "^4.9.0",
-    "@floracodex/eslint-config": "^1.0.1",
+    "@floracodex/eslint-config": "^1.1.0",
     "@google-cloud/secret-manager": "^6.1.2",
     "@nestjs/cli": "^11.0.21",
     "@nestjs/testing": "^11.1.0",
