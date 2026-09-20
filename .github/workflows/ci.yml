@@ -5,27 +5,54 @@ on:
 
 jobs:
     build-and-test:
+        name: Nest ${{ matrix.nest }} on Node ${{ matrix.node-version }}
         runs-on: ubuntu-latest
 
         strategy:
             matrix:
-                node-version: [ 20.x, 22.x, 24.x ]
+                include:
+                    # NestJS 11 is CommonJS and runs everywhere the library's peers allow.
+                    -   node-version: 20.x
+                        nest: 11
+                    -   node-version: 22.x
+                        nest: 11
+                    -   node-version: 24.x
+                        nest: 11
+                    # NestJS 12 ships ESM. The library requires it through require(esm); Jest
+                    # needs --experimental-vm-modules and Node 24.9+ to do the same.
+                    -   node-version: 24.x
+                        nest: 12
 
         steps:
             -   name: Checkout repository
-                uses: actions/checkout@v6
+                uses: actions/checkout@v7
 
             -   name: Use Node.js ${{ matrix.node-version }}
-                uses: actions/setup-node@v6
+                uses: actions/setup-node@v7
                 with:
                     node-version: ${{ matrix.node-version }}
                     cache: 'npm'
 
             -   name: Install dependencies
+                if: matrix.nest == 12
                 run: npm ci
+
+            -   name: Install dependencies with NestJS 11
+                if: matrix.nest == 11
+                # The lockfile carries Nest 12. This job resolves a fresh tree pinned to the 11
+                # line the peers also admit, without writing the lockfile. The example workspace
+                # pins 12 and is not built here, so it is left out of the resolution.
+                run: |
+                    npm install --no-save --no-package-lock --workspaces=false --no-audit --no-fund \
+                      @nestjs/common@11 @nestjs/core@11 @nestjs/platform-express@11 \
+                      @nestjs/testing@11 @nestjs/config@4
+                    node -p "'@nestjs/common ' + JSON.parse(require('fs').readFileSync('node_modules/@nestjs/common/package.json', 'utf8')).version"
 
             -   name: Build
                 run: npm run build
+
+            -   name: Lint
+                run: npm run lint
 
             -   name: Test
                 run: npm run test

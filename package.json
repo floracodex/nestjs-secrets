@@ -1,6 +1,6 @@
 {
   "name": "@floracodex/nestjs-secrets",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "workspaces": [
     "example"
   ],
@@ -29,8 +29,8 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "eslint . --fix",
-    "test": "jest --config ./test/jest-e2e.json",
-    "test:watch": "jest --config ./test/jest-e2e.json --watch",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-e2e.json --watch",
     "prepublishOnly": "npm run build"
   },
   "repository": {
@@ -59,37 +59,37 @@
     "testEnvironment": "node"
   },
   "dependencies": {
-    "js-yaml": "^4.1.0",
+    "js-yaml": "^4.3.2",
     "lodash": "^4.17.21",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@aws-sdk/client-secrets-manager": "^3.1041.0",
-    "@aws-sdk/client-ssm": "^3.1041.0",
-    "@azure/identity": "^4.9.1",
-    "@azure/keyvault-secrets": "^4.9.0",
-    "@floracodex/eslint-config": "^1.1.0",
-    "@google-cloud/secret-manager": "^6.1.2",
-    "@nestjs/cli": "^11.0.21",
-    "@nestjs/testing": "^11.1.0",
+    "@aws-sdk/client-secrets-manager": "^3.1136.0",
+    "@aws-sdk/client-ssm": "^3.1136.0",
+    "@azure/identity": "^4.13.3",
+    "@azure/keyvault-secrets": "^4.11.2",
+    "@floracodex/eslint-config": "^1.2.0",
+    "@google-cloud/secret-manager": "^6.3.0",
+    "@nestjs/cli": "^12.0.3",
+    "@nestjs/testing": "^12.0.3",
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
-    "@types/lodash": "^4.17.16",
-    "@types/node": "^25.6.0",
-    "eslint": "^10.3.0",
-    "jest": "^30.3.0",
+    "@types/lodash": "^4.17.25",
+    "@types/node": "^25.9.8",
+    "eslint": "^10.11.0",
+    "jest": "^30.5.2",
     "rimraf": "^6.0.1",
-    "ts-jest": "^29.3.2",
+    "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   },
   "peerDependencies": {
     "@aws-sdk/client-secrets-manager": "^3.799.0",
     "@aws-sdk/client-ssm": "^3.0.0",
     "@azure/keyvault-secrets": "^4.0.0",
     "@google-cloud/secret-manager": "^6.0.1",
-    "@nestjs/common": "^10.0.0 || ^11.0.0",
-    "@nestjs/config": "^3.0.0 || ^4.0.0"
+    "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0",
+    "@nestjs/config": "^3.0.0 || ^4.0.0 || ^12.0.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-secrets-manager": {
