@@ -1,6 +1,6 @@
 {
   "name": "@floracodex/nestjs-secrets",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "workspaces": [
     "example"
   ],
@@ -29,8 +29,8 @@
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "eslint . --fix",
-    "test": "jest --config ./test/jest-e2e.json",
-    "test:watch": "jest --config ./test/jest-e2e.json --watch",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-e2e.json",
+    "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config ./test/jest-e2e.json --watch",
     "prepublishOnly": "npm run build"
   },
   "repository": {
@@ -70,8 +70,8 @@
     "@azure/keyvault-secrets": "^4.11.2",
     "@floracodex/eslint-config": "^1.2.0",
     "@google-cloud/secret-manager": "^6.3.0",
-    "@nestjs/cli": "^11.0.24",
-    "@nestjs/testing": "^11.2.5",
+    "@nestjs/cli": "^12.0.3",
+    "@nestjs/testing": "^12.0.3",
     "@types/jest": "^30.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.17.25",
@@ -81,15 +81,15 @@
     "rimraf": "^6.0.1",
     "ts-jest": "^29.4.12",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "~6.0.3"
   },
   "peerDependencies": {
     "@aws-sdk/client-secrets-manager": "^3.799.0",
     "@aws-sdk/client-ssm": "^3.0.0",
     "@azure/keyvault-secrets": "^4.0.0",
     "@google-cloud/secret-manager": "^6.0.1",
-    "@nestjs/common": "^10.0.0 || ^11.0.0",
-    "@nestjs/config": "^3.0.0 || ^4.0.0"
+    "@nestjs/common": "^10.0.0 || ^11.0.0 || ^12.0.0",
+    "@nestjs/config": "^3.0.0 || ^4.0.0 || ^12.0.0"
   },
   "peerDependenciesMeta": {
     "@aws-sdk/client-secrets-manager": {
